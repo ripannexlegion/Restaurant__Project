@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Gilded Spoon Customer Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="customer_script.js">
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            DEFAULT: 'var(--theme-primary)',
+                            secondary: 'var(--theme-secondary)',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            overflow-x: hidden;
+        }
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(0,0,0,0.05);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(150,150,150,0.3);
+            border-radius: 9999px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(150,150,150,0.5);
+        }
+        .theme-gradient {
+            background: linear-gradient(135deg, var(--theme-primary, #FC8019) 0%, var(--theme-secondary, #E23744) 100%);
+            transition: background 0.5s ease;
+        }
+        .theme-border {
+            border-color: var(--theme-primary, #FC8019);
+            transition: border-color 0.5s ease;
+        }
+        .theme-text {
+            color: var(--theme-primary, #FC8019);
+            transition: color 0.5s ease;
+        }
+        .theme-bg {
+            background-color: var(--theme-primary, #FC8019);
+            transition: background-color 0.5s ease;
+        }
+        .backdrop-blur-sticky {
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
+    </style>
+</head>
+<body class="h-full flex flex-col antialiased bg-slate-50 dark:bg-[#0B1310] text-slate-900 dark:text-slate-100 transition-colors duration-500" style="--theme-primary: #FC8019; --theme-secondary: #E23744;">
+
+    <!-- APP CONTAINER -->
+    <div id="app" class="flex flex-col h-screen w-full relative overflow-hidden">
+
+        <!-- ================= STICKY TOP HEADER ================= -->
+        <header id="main-header" class="h-20 bg-white/90 dark:bg-[#13221C]/90 backdrop-blur-md border-b border-slate-200 dark:border-emerald-900/40 px-4 sm:px-8 flex items-center justify-between shrink-0 z-40 hidden shadow-sm">
+            <div class="flex items-center space-x-3 sm:space-x-6">
+                <div class="flex items-center space-x-3 cursor-pointer group" onclick="switchView('menu')">
+                    <div id="header-logo-bg" class="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl theme-gradient flex items-center justify-center shadow-lg group-hover:scale-105 transition-all duration-500">
+                        <i class="fa-solid fa-utensils text-white text-base sm:text-xl"></i>
+                    </div>
+                    <div>
+                        <h1 class="font-bold text-sm sm:text-base tracking-wide text-slate-900 dark:text-white flex items-center space-x-2">
+                            <span>The Gilded Spoon</span>
+                            <span class="hidden sm:inline-block text-[10px] bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/40 px-2 py-0.5 rounded-full">Dine-In</span>
+                        </h1>
+                        <p class="text-[11px] sm:text-xs text-slate-500 dark:text-emerald-400/80 flex items-center space-x-1 mt-0.5">
+                            <i class="fa-solid fa-location-dot"></i>
+                            <span>Grand Hall • <strong class="text-slate-800 dark:text-white">Table 01</strong></span>
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- DESKTOP SEARCH -->
+            <div class="hidden md:flex items-center space-x-3 flex-1 max-w-md mx-6">
+                <div class="relative flex-1">
+                    <span class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400">
+                        <i class="fa-solid fa-search"></i>
+                    </span>
+                    <input type="text" id="header-search" oninput="handleSearch(this.value)" placeholder="Search dishes, drinks, truffle..." class="w-full bg-slate-100 dark:bg-[#0B1310] border border-slate-200 dark:border-emerald-900/40 text-xs sm:text-sm rounded-2xl pl-11 pr-4 py-2.5 focus:outline-none focus:border-brand text-slate-800 dark:text-white placeholder-slate-400 shadow-inner transition-colors">
+                </div>
+            </div>
+
+            <!-- HEADER CONTROLS -->
+            <div class="flex items-center space-x-2 sm:space-x-4">
+                <button onclick="toggleDarkMode()" class="w-10 h-10 rounded-2xl bg-slate-100 dark:bg-[#0B1310] border border-slate-200 dark:border-emerald-900/40 flex items-center justify-center text-slate-600 dark:text-amber-400 hover:scale-105 transition-all" title="Toggle Light/Dark">
+                    <i id="theme-mode-icon" class="fa-solid fa-moon text-sm"></i>
+                </button>
+                <button onclick="switchView('tracking')" class="hidden sm:flex bg-slate-100 dark:bg-[#0B1310] hover:bg-slate-200 dark:hover:bg-emerald-950/50 border border-slate-200 dark:border-emerald-900/40 px-3.5 py-2 rounded-2xl items-center space-x-2 transition-all text-xs font-semibold">
+                    <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                    <span>Live Tracking</span>
+                </button>
+                <button onclick="switchView('cart')" class="relative theme-gradient hover:opacity-95 text-white p-2.5 sm:px-4 sm:py-2.5 rounded-2xl transition-all shadow-lg flex items-center space-x-2">
+                    <i class="fa-solid fa-bag-shopping"></i>
+                    <span id="cart-badge-count" class="text-[10px] sm:text-xs font-extrabold bg-white text-slate-900 px-1.5 py-0.5 rounded-full">0</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- ================= MAIN VIEWPORT ================= -->
+        <main class="flex-1 overflow-hidden relative flex">
+
+            <!-- 1. WELCOME / LANDING PAGE -->
+            <div id="view-welcome" class="absolute inset-0 bg-slate-100 dark:bg-[#0B1310] flex flex-col items-center justify-center p-4 sm:p-8 z-20 overflow-y-auto">
+                <div class="max-w-md w-full bg-white dark:bg-[#13221C] border border-slate-200 dark:border-emerald-900/40 rounded-3xl p-6 sm:p-10 text-center shadow-2xl relative overflow-hidden">
+                    <div class="absolute -top-24 -right-24 w-48 h-48 bg-brand/10 rounded-full blur-3xl pointer-events-none"></div>
+                    <div class="absolute -bottom-24 -left-24 w-48 h-48 bg-rose-500/10 rounded-full blur-3xl pointer-events-none"></div>
+
+                    <div class="w-16 h-16 sm:w-20 sm:h-20 theme-gradient rounded-3xl mx-auto flex items-center justify-center shadow-2xl mb-5 transform rotate-3">
+                        <i class="fa-solid fa-utensils text-2xl sm:text-3xl text-white"></i>
+                    </div>
+
+                    <span class="bg-brand/15 text-brand text-[11px] font-bold px-3 py-1 rounded-full uppercase tracking-wider border border-brand/30">Table 01 Verified Session</span>
+
+                    <h1 class="text-2xl sm:text-3xl font-extrabold mt-3 mb-2 text-slate-900 dark:text-white">The Gilded Spoon</h1>
+                    <p class="text-slate-500 dark:text-slate-400 text-xs sm:text-sm max-w-xs mx-auto mb-6 leading-relaxed">
+                        Scan, order, customize dishes with AI ingredient suggestions, and track kitchen preparation live from your table.
+                    </p>
+
+                    <div class="space-y-3">
+                        <button onclick="startSession()" class="w-full theme-gradient hover:opacity-95 text-white font-bold py-3.5 px-6 rounded-2xl shadow-xl transition-all transform hover:-translate-y-0.5 flex items-center justify-center space-x-2 text-xs sm:text-sm">
+                            <span>Explore Menu & Order</span>
+                            <i class="fa-solid fa-arrow-right"></i>
+                        </button>
+                        <button onclick="switchView('tracking')" class="w-full bg-slate-100 dark:bg-[#0F1015] hover:bg-slate-200 dark:hover:bg-emerald-950/40 border border-slate-200 dark:border-emerald-900/40 text-slate-600 dark:text-slate-300 font-semibold py-3 px-6 rounded-2xl transition-all text-xs">
+                            <i class="fa-solid fa-clock-rotate-left mr-2 theme-text"></i> View Table Order History
+                        </button>
+                    </div>
+
+                    <div class="mt-6 pt-5 border-t border-slate-100 dark:border-emerald-900/30 flex justify-center items-center space-x-4 text-[11px] text-slate-400">
+                        <span><i class="fa-solid fa-shield-halved theme-text mr-1"></i> Secure QR</span>
+                        <span><i class="fa-solid fa-bolt theme-text mr-1"></i> Instant Sync</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. HOME / FOOD MENU (Zero Gap, Sticky Frosted Glass Filter Bar) -->
+            <div id="view-menu" class="absolute inset-0 flex flex-col lg:flex-row hidden overflow-hidden">
+                <!-- Left/Center Menu Workspace with Independent Sizing -->
+                <div class="flex-1 flex flex-col h-full bg-slate-50 dark:bg-[#0B1310] overflow-y-auto px-4 sm:px-6 lg:px-8 pt-0">
+                    
+                    <!-- STICKY FILTER BAR WITH ZERO GAP & BACKDROP BLUR -->
+                    <div class="sticky top-0 bg-slate-50/85 dark:bg-[#0B1310]/85 backdrop-blur-sticky py-3 z-20 space-y-3 border-b border-slate-200/50 dark:border-emerald-900/20">
+                        <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+                            <!-- Mobile Search -->
+                            <div class="relative flex-1 block lg:hidden">
+                                <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400 text-xs">
+                                    <i class="fa-solid fa-search"></i>
+                                </span>
+                                <input type="text" oninput="handleSearch(this.value)" placeholder="Search dishes..." class="w-full bg-white dark:bg-[#13221C] border border-slate-200 dark:border-emerald-900/40 text-xs rounded-xl pl-9 pr-3 py-2.5 focus:outline-none focus:border-brand text-slate-800 dark:text-white">
+                            </div>
+
+                            <!-- VEG / NON-VEG / MOST POPULAR FILTER BUTTONS WITH HOVER LOCKING -->
+                            <div class="flex items-center bg-white dark:bg-[#13221C] border border-slate-200 dark:border-emerald-900/40 p-1 rounded-2xl shrink-0 shadow-sm overflow-x-auto">
+                                <button onclick="setThemeFilter('all')" id="filter-all-btn" class="px-3.5 py-2 rounded-xl text-xs font-bold transition-all bg-[#FC8019] text-white shadow-md">All</button>
+                                <button onclick="setThemeFilter('veg')" id="filter-veg-btn" class="px-3.5 py-2 rounded-xl text-xs font-bold transition-all text-slate-500 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400">🌱 Veg</button>
+                                <button onclick="setThemeFilter('non-veg')" id="filter-nonveg-btn" class="px-3.5 py-2 rounded-xl text-xs font-bold transition-all text-slate-500 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-400">🍗 Non-Veg</button>
+                                <button onclick="setThemeFilter('popular')" id="filter-popular-btn" class="px-3.5 py-2 rounded-xl text-xs font-bold transition-all text-slate-500 dark:text-slate-400 hover:text-amber-600 dark:hover:text-amber-400">🔥 Most Popular</button>
+                            </div>
+                        </div>
+
+                        <!-- Category Scroll Bar -->
+                        <div class="flex items-center space-x-2.5 overflow-x-auto pb-1 shrink-0 no-scrollbar">
+                            <button onclick="filterCategory('All')" class="cat-pill px-4 sm:px-5 py-2.5 rounded-2xl text-xs font-bold transition-all theme-bg text-white shadow-md shrink-0">All Dishes</button>
+                            <button onclick="filterCategory('Appetizers')" class="cat-pill px-4 sm:px-5 py-2.5 rounded-2xl text-xs font-bold transition-all bg-white dark:bg-[#13221C] text-slate-600 dark:text-slate-300 hover:text-slate-900 border border-slate-200 dark:border-emerald-900/40 shrink-0">Appetizers</button>
+                            <button onclick="filterCategory('Mains')" class="cat-pill px-4 sm:px-5 py-2.5 rounded-2xl text-xs font-bold transition-all bg-white dark:bg-[#13221C] text-slate-600 dark:text-slate-300 hover:text-slate-900 border border-slate-200 dark:border-emerald-900/40 shrink-0">Mains</button>
+                            <button onclick="filterCategory('Drinks')" class="cat-pill px-4 sm:px-5 py-2.5 rounded-2xl text-xs font-bold transition-all bg-white dark:bg-[#13221C] text-slate-600 dark:text-slate-300 hover:text-slate-900 border border-slate-200 dark:border-emerald-900/40 shrink-0">Drinks & Bar</button>
+                            <button onclick="filterCategory('Desserts')" class="cat-pill px-4 sm:px-5 py-2.5 rounded-2xl text-xs font-bold transition-all bg-white dark:bg-[#13221C] text-slate-600 dark:text-slate-300 hover:text-slate-900 border border-slate-200 dark:border-emerald-900/40 shrink-0">Desserts</button>
+                        </div>
+                    </div>
+
+                    <!-- Food Grid -->
+                    <div id="menu-grid" class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6 pb-24 mt-4">
+                        <!-- Populated via JS -->
+                    </div>
+                </div>
+
+                <!-- Right Sticky Cart Sidebar (Desktop & Tablet Layout) -->
+                <div class="hidden lg:flex w-[380px] bg-white dark:bg-[#13221C] border-l border-slate-200 dark:border-emerald-900/40 flex-col h-full shadow-2xl z-10 shrink-0">
+                    <div class="p-5 border-b border-slate-100 dark:border-emerald-900/30 flex items-center justify-between">
+                        <div class="flex items-center space-x-3">
+                            <div class="w-9 h-9 rounded-xl bg-brand/20 text-brand flex items-center justify-center font-bold">
+                                <i class="fa-solid fa-receipt"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-sm text-slate-900 dark:text-white">Table 01 Cart</h3>
+                                <p class="text-[11px] text-slate-400">Live session active</p>
+                            </div>
+                        </div>
+                        <span id="cart-item-count-label" class="text-xs bg-slate-100 dark:bg-[#0B1310] px-2.5 py-1 rounded-lg text-slate-500 font-semibold">0 items</span>
+                    </div>
+
+                    <div id="sidebar-cart-items" class="flex-1 overflow-y-auto p-4 space-y-3">
+                        <div class="text-center py-16 text-slate-400">
+                            <i class="fa-solid fa-basket-shopping text-4xl mb-3 text-slate-300 dark:text-emerald-950"></i>
+                            <p class="text-xs font-medium">Your table cart is empty.</p>
+                        </div>
+                    </div>
+
+                    <div class="p-5 border-t border-slate-100 dark:border-emerald-900/30 bg-slate-50/50 dark:bg-[#0B1310]/50 space-y-3">
+                        <div class="space-y-1.5 text-xs">
+                            <div class="flex justify-between text-slate-500">
+                                <span>Subtotal</span>
+                                <span id="cart-subtotal" class="text-slate-800 dark:text-white font-bold">$0.00</span>
+                            </div>
+                            <div class="flex justify-between text-slate-500">
+                                <span>Service Tax (10%)</span>
+                                <span id="cart-tax" class="text-slate-800 dark:text-white font-bold">$0.00</span>
+                            </div>
+                            <div class="flex justify-between text-sm font-extrabold pt-2 border-t border-slate-200 dark:border-emerald-900/40">
+                                <span class="text-slate-800 dark:text-white">Total</span>
+                                <span id="cart-total" class="theme-text text-base">$0.00</span>
+                            </div>
+                        </div>
+
+                        <button onclick="proceedToCheckout()" id="checkout-btn" disabled class="w-full bg-slate-200 dark:bg-emerald-950 text-slate-400 dark:text-slate-500 cursor-not-allowed font-bold py-3.5 rounded-2xl transition-all text-xs flex items-center justify-center space-x-2">
+                            <span>Proceed to Checkout</span>
+                            <i class="fa-solid fa-arrow-right"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. FOOD DETAILS & CUSTOMIZATION / SUGGESTION MODAL -->
+            <div id="view-details" class="absolute inset-0 bg-slate-900/60 backdrop-blur-md z-30 flex items-center justify-center p-3 sm:p-6 hidden overflow-y-auto">
+                <div class="bg-white dark:bg-[#13221C] border border-slate-200 dark:border-emerald-900/40 rounded-3xl max-w-3xl w-full max-h-[90vh] overflow-hidden shadow-2xl flex flex-col md:flex-row relative">
+                    
+                    <button onclick="switchView('menu')" class="absolute top-4 left-4 z-20 bg-white/90 dark:bg-[#0B1310]/90 hover:bg-white text-slate-800 dark:text-white px-4 py-2 rounded-2xl text-xs font-bold border border-slate-200 dark:border-emerald-900/40 flex items-center space-x-2 shadow-md transition-all">
+                        <i class="fa-solid fa-arrow-left"></i><span>Back to Menu</span>
+                    </button>
+
+                    <div class="w-full md:w-1/2 relative bg-slate-100 dark:bg-[#0B1310] min-h-[220px] md:min-h-full">
+                        <img id="detail-img" src="" alt="Dish" class="w-full h-full object-cover">
+                        <div id="detail-popular-badge" class="absolute bottom-4 left-4 hidden bg-amber-500 text-slate-900 px-3 py-1 rounded-xl text-xs font-extrabold shadow-lg">🔥 Top Popular Choice</div>
+                    </div>
+
+                    <div class="w-full md:w-1/2 p-6 sm:p-8 flex flex-col justify-between overflow-y-auto max-h-[60vh] md:max-h-[90vh]">
+                        <div>
+                            <div class="flex items-center justify-between mb-2 mt-8 md:mt-0">
+                                <span id="detail-category" class="text-[10px] uppercase font-extrabold theme-text tracking-wider bg-brand/10 px-3 py-1 rounded-full border border-brand/30">Appetizer</span>
+                                <span id="detail-price" class="font-extrabold text-xl sm:text-2xl text-slate-900 dark:text-white">$18.50</span>
+                            </div>
+                            <h2 id="detail-title" class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white mb-2">Dish Name</h2>
+                            <p id="detail-desc" class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed mb-4">Description of ingredients and preparation.</p>
+
+                            <!-- Spice Level Selector -->
+                            <div class="mb-4">
+                                <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Customize Spice Level</label>
+                                <div class="flex space-x-2.5">
+                                    <button onclick="setSpice(1)" id="spice-1" class="spice-btn flex-1 py-2 bg-brand/10 border theme-border rounded-xl text-xs font-semibold theme-text">Mild</button>
+                                    <button onclick="setSpice(2)" id="spice-2" class="spice-btn flex-1 py-2 bg-slate-100 dark:bg-[#0B1310] border border-slate-200 dark:border-emerald-900/40 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-300">Medium</button>
+                                    <button onclick="setSpice(3)" id="spice-3" class="spice-btn flex-1 py-2 bg-slate-100 dark:bg-[#0B1310] border border-slate-200 dark:border-emerald-900/40 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-300">Spicy</button>
+                                </div>
+                            </div>
+
+                            <!-- AI Ingredient Suggestions & Add-ons -->
+                            <div class="mb-5">
+                                <div class="flex items-center justify-between mb-2">
+                                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider">Suggested Ingredients & Add-ons</label>
+                                    <span class="text-[10px] text-amber-500 font-bold bg-amber-500/10 px-2 py-0.5 rounded-md border border-amber-500/20"><i class="fa-solid fa-wand-magic-sparkles mr-1"></i> AI Chef Pick</span>
+                                </div>
+                                <div class="space-y-2 text-xs" id="detail-suggestions-container">
+                                    <label class="flex items-center justify-between bg-slate-50 dark:bg-[#0B1310] p-3 rounded-2xl border border-slate-200 dark:border-emerald-900/40 cursor-pointer hover:border-brand">
+                                        <div class="flex items-center space-x-3">
+                                            <input type="checkbox" name="custom" value="Extra Truffle Oil (+$3.50)" class="rounded text-brand w-4 h-4">
+                                            <span class="text-slate-700 dark:text-slate-200 font-medium">Extra Truffle Oil</span>
+                                        </div>
+                                        <span class="theme-text font-bold">+$3.50</span>
+                                    </label>
+                                    <label class="flex items-center justify-between bg-slate-50 dark:bg-[#0B1310] p-3 rounded-2xl border border-slate-200 dark:border-emerald-900/40 cursor-pointer hover:border-brand">
+                                        <div class="flex items-center space-x-3">
+                                            <input type="checkbox" name="custom" value="Organic Wild Mushrooms (+$4.00)" class="rounded text-brand w-4 h-4">
+                                            <span class="text-slate-700 dark:text-slate-200 font-medium">Organic Wild Mushrooms</span>
+                                        </div>
+                                        <span class="theme-text font-bold">+$4.00</span>
+                                    </label>
+                                    <label class="flex items-center justify-between bg-slate-50 dark:bg-[#0B1310] p-3 rounded-2xl border border-slate-200 dark:border-emerald-900/40 cursor-pointer hover:border-brand">
+                                        <div class="flex items-center space-x-3">
+                                            <input type="checkbox" name="custom" value="Aged Parmesan Shavings (+$2.50)" class="rounded text-brand w-4 h-4">
+                                            <span class="text-slate-700 dark:text-slate-200 font-medium">Aged Parmesan Shavings</span>
+                                        </div>
+                                        <span class="theme-text font-bold">+$2.50</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="pt-4 border-t border-slate-100 dark:border-emerald-900/30 flex items-center space-x-3">
+                            <div class="flex items-center bg-slate-100 dark:bg-[#0B1310] border border-slate-200 dark:border-emerald-900/40 rounded-2xl p-1">
+                                <button onclick="adjustDetailQty(-1)" class="w-9 h-9 rounded-xl hover:bg-slate-200 dark:hover:bg-emerald-950 text-slate-700 dark:text-white flex items-center justify-center">-</button>
+                                <span id="detail-qty" class="w-8 text-center font-bold text-xs text-slate-800 dark:text-white">1</span>
+                                <button onclick="adjustDetailQty(1)" class="w-9 h-9 rounded-xl hover:bg-slate-200 dark:hover:bg-emerald-950 text-slate-700 dark:text-white flex items-center justify-center">+</button>
+                            </div>
+                            <button onclick="addCurrentDishToCart()" class="flex-1 theme-gradient hover:opacity-95 text-white font-bold py-3.5 px-4 rounded-2xl shadow-xl transition-all text-xs flex items-center justify-center space-x-2">
+                                <i class="fa-solid fa-cart-plus"></i>
+                                <span id="detail-add-label">Add ($18.50)</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 4. SHOPPING CART VIEW -->
+            <div id="view-cart" class="absolute inset-0 bg-slate-50 dark:bg-[#0B1310] overflow-y-auto p-4 sm:p-8 hidden">
+                <div class="max-w-3xl mx-auto pb-20">
+                    <div class="flex items-center justify-between mb-6">
+                        <button onclick="switchView('menu')" class="bg-white dark:bg-[#13221C] hover:bg-slate-100 text-slate-800 dark:text-white px-4 py-2.5 rounded-2xl text-xs font-bold border border-slate-200 dark:border-emerald-900/40 flex items-center space-x-2 shadow-sm">
+                            <i class="fa-solid fa-arrow-left"></i><span>Back to Menu</span>
+                        </button>
+                        <span class="text-xs uppercase font-extrabold theme-text tracking-wider">Table 01 Order Cart</span>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div class="md:col-span-2 space-y-3" id="cart-full-list"></div>
+                        <div class="bg-white dark:bg-[#13221C] border border-slate-200 dark:border-emerald-900/40 rounded-3xl p-6 h-fit space-y-4 shadow-xl">
+                            <h3 class="font-bold text-sm text-slate-900 dark:text-white border-b border-slate-100 dark:border-emerald-900/30 pb-3">Bill Summary</h3>
+                            <div class="space-y-2 text-xs">
+                                <div class="flex justify-between text-slate-500">
+                                    <span>Subtotal</span>
+                                    <span id="full-cart-subtotal" class="text-slate-800 dark:text-white font-bold">$0.00</span>
+                                </div>
+                                <div class="flex justify-between text-slate-500">
+                                    <span>Service Tax (10%)</span>
+                                    <span id="full-cart-tax" class="text-slate-800 dark:text-white font-bold">$0.00</span>
+                                </div>
+                                <div class="flex justify-between text-sm font-extrabold pt-2 border-t border-slate-200 dark:border-emerald-900/40">
+                                    <span class="text-slate-800 dark:text-white">Total Due</span>
+                                    <span id="full-cart-total" class="theme-text text-base">$0.00</span>
+                                </div>
+                            </div>
+                            <button onclick="switchView('checkout')" class="w-full theme-gradient hover:opacity-95 text-white font-bold py-3.5 rounded-2xl shadow-xl transition-all text-xs flex items-center justify-center space-x-2">
+                                <span>Proceed to Payment</span>
+                                <i class="fa-solid fa-credit-card"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 5 & 7. CHECKOUT & PAYMENT VIEW -->
+            <div id="view-checkout" class="absolute inset-0 bg-slate-50 dark:bg-[#0B1310] overflow-y-auto p-4 sm:p-8 hidden">
+                <div class="max-w-2xl mx-auto pb-20">
+                    <div class="flex items-center justify-between mb-6">
+                        <button onclick="switchView('cart')" class="bg-white dark:bg-[#13221C] hover:bg-slate-100 text-slate-800 dark:text-white px-4 py-2.5 rounded-2xl text-xs font-bold border border-slate-200 dark:border-emerald-900/40 flex items-center space-x-2 shadow-sm">
+                            <i class="fa-solid fa-arrow-left"></i><span>Back to Cart</span>
+                        </button>
+                        <span class="text-xs uppercase font-extrabold theme-text tracking-wider">Table 01 Settlement</span>
+                    </div>
+
+                    <div class="bg-white dark:bg-[#13221C] border border-slate-200 dark:border-emerald-900/40 rounded-3xl p-6 sm:p-8 space-y-6 shadow-2xl">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Select Payment Method</label>
+                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                                <button onclick="selectPayment('Card')" id="pay-card" class="pay-method-btn bg-slate-50 dark:bg-[#0B1310] border-2 theme-border rounded-2xl p-4 text-left transition-all shadow-sm">
+                                    <i class="fa-solid fa-credit-card theme-text text-lg mb-2"></i>
+                                    <h4 class="font-bold text-xs text-slate-800 dark:text-white">Card</h4>
+                                </button>
+                                <button onclick="selectPayment('Apple')" id="pay-apple" class="pay-method-btn bg-slate-50 dark:bg-[#0B1310] border border-slate-200 dark:border-emerald-900/40 rounded-2xl p-4 text-left transition-all">
+                                    <i class="fa-brands fa-apple text-slate-800 dark:text-white text-lg mb-2"></i>
+                                    <h4 class="font-bold text-xs text-slate-800 dark:text-white">Apple Pay</h4>
+                                </button>
+                                <button onclick="selectPayment('Cash')" id="pay-cash" class="pay-method-btn bg-slate-50 dark:bg-[#0B1310] border border-slate-200 dark:border-emerald-900/40 rounded-2xl p-4 text-left transition-all">
+                                    <i class="fa-solid fa-money-bill-wave text-emerald-500 text-lg mb-2"></i>
+                                    <h4 class="font-bold text-xs text-slate-800 dark:text-white">Cash</h4>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="pt-5 border-t border-slate-100 dark:border-emerald-900/30 flex items-center justify-between">
+                            <div>
+                                <span class="text-xs text-slate-400">Total Payable</span>
+                                <div id="checkout-final-amount" class="text-2xl font-extrabold theme-text mt-0.5">$0.00</div>
+                            </div>
+                            <button onclick="submitOrderAndPay()" class="theme-gradient hover:opacity-95 text-white font-bold py-3.5 px-6 rounded-2xl shadow-xl transition-all text-xs flex items-center space-x-2">
+                                <i class="fa-solid fa-lock"></i>
+                                <span>Pay & Send to Kitchen</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 6. LIVE ORDER TRACKING -->
+            <div id="view-tracking" class="absolute inset-0 bg-slate-50 dark:bg-[#0B1310] overflow-y-auto p-4 sm:p-8 hidden">
+                <div class="max-w-2xl mx-auto pb-20">
+                    <div class="flex items-center justify-between mb-6">
+                        <button onclick="switchView('menu')" class="bg-white dark:bg-[#13221C] hover:bg-slate-100 text-slate-800 dark:text-white px-4 py-2.5 rounded-2xl text-xs font-bold border border-slate-200 dark:border-emerald-900/40 flex items-center space-x-2 shadow-sm">
+                            <i class="fa-solid fa-arrow-left"></i><span>Back to Menu</span>
+                        </button>
+                        <span class="text-xs uppercase font-extrabold theme-text tracking-wider">Kitchen Live Feed</span>
+                    </div>
+
+                    <div class="bg-white dark:bg-[#13221C] border border-slate-200 dark:border-emerald-900/40 rounded-3xl p-6 sm:p-8 space-y-6 shadow-2xl">
+                        <div class="flex items-center justify-between border-b border-slate-100 dark:border-emerald-900/30 pb-4">
+                            <div>
+                                <span class="text-xs text-slate-400">Table 01 Session #GS-8942</span>
+                                <h3 class="text-lg font-extrabold text-slate-900 dark:text-white mt-0.5">Kitchen Progress</h3>
+                            </div>
+                            <span class="bg-brand/15 text-brand border border-brand/30 text-xs px-3.5 py-1.5 rounded-full font-bold flex items-center space-x-2">
+                                <span class="w-2 h-2 rounded-full bg-brand animate-ping"></span>
+                                <span id="tracking-status-text">Preparing</span>
+                            </span>
+                        </div>
+
+                        <div class="py-4">
+                            <div class="relative flex items-center justify-between max-w-md mx-auto">
+                                <div class="absolute left-0 right-0 h-1 bg-slate-100 dark:bg-[#0B1310] top-1/2 -translate-y-1/2 z-0 rounded-full"></div>
+                                <div id="progress-bar-fill" class="absolute left-0 h-1 theme-gradient top-1/2 -translate-y-1/2 z-0 transition-all duration-500 rounded-full" style="width: 50%;"></div>
+
+                                <div class="relative z-10 flex flex-col items-center">
+                                    <div class="w-10 h-10 rounded-2xl theme-gradient text-white flex items-center justify-center font-bold text-xs shadow-md"><i class="fa-solid fa-check"></i></div>
+                                    <span class="text-[11px] font-bold text-slate-700 dark:text-slate-300 mt-2">Received</span>
+                                </div>
+                                <div class="relative z-10 flex flex-col items-center">
+                                    <div class="w-10 h-10 rounded-2xl theme-gradient text-white flex items-center justify-center font-bold text-xs shadow-md animate-pulse"><i class="fa-solid fa-fire-burner"></i></div>
+                                    <span class="text-[11px] font-bold theme-text mt-2">Preparing</span>
+                                </div>
+                                <div class="relative z-10 flex flex-col items-center">
+                                    <div class="w-10 h-10 rounded-2xl bg-slate-100 dark:bg-[#0B1310] border border-slate-200 dark:border-emerald-900/40 text-slate-400 flex items-center justify-center font-bold text-xs"><i class="fa-solid fa-bell-concierge"></i></div>
+                                    <span class="text-[11px] font-bold text-slate-400 mt-2">Served</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="pt-3 border-t border-slate-100 dark:border-emerald-900/30 flex justify-between items-center">
+                            <button onclick="advanceTrackingState()" class="bg-slate-100 dark:bg-[#0B1310] hover:bg-slate-200 text-slate-700 dark:text-slate-200 text-xs px-4 py-2.5 rounded-2xl border border-slate-200 dark:border-emerald-900/40 font-semibold">
+                                <i class="fa-solid fa-rotate mr-1.5 theme-text"></i> Simulate Next Status
+                            </button>
+                            <button onclick="switchView('review')" class="theme-gradient text-white text-xs font-bold px-5 py-2.5 rounded-2xl shadow-md">
+                                Leave Review & Close <i class="fa-solid fa-arrow-right ml-1"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 8. FEEDBACK / REVIEW VIEW -->
+            <div id="view-review" class="absolute inset-0 bg-slate-50 dark:bg-[#0B1310] overflow-y-auto p-4 sm:p-8 hidden">
+                <div class="max-w-md mx-auto pb-20">
+                    <div class="bg-white dark:bg-[#13221C] border border-slate-200 dark:border-emerald-900/40 rounded-3xl p-6 sm:p-8 text-center shadow-2xl relative">
+                        <button onclick="switchView('tracking')" class="absolute top-4 left-4 bg-slate-100 dark:bg-[#0B1310] hover:bg-slate-200 text-slate-700 dark:text-white px-3 py-1.5 rounded-xl text-xs font-bold border border-slate-200 dark:border-emerald-900/40 flex items-center space-x-1">
+                            <i class="fa-solid fa-arrow-left"></i><span>Back</span>
+                        </button>
+
+                        <div class="w-16 h-16 theme-gradient rounded-3xl mx-auto flex items-center justify-center shadow-xl mb-4 mt-6">
+                            <i class="fa-solid fa-star text-2xl text-white"></i>
+                        </div>
+
+                        <span class="bg-brand/15 text-brand text-[11px] font-bold px-3 py-1 rounded-full uppercase tracking-wider">Table 01 Review</span>
+
+                        <h2 class="text-xl sm:text-2xl font-extrabold mt-3 mb-1 text-slate-900 dark:text-white">How was your dining experience?</h2>
+                        <p class="text-xs text-slate-400 mb-5">Your feedback helps our master chefs excel.</p>
+
+                        <div class="flex justify-center space-x-2 text-amber-400 text-2xl mb-5">
+                            <i class="fa-solid fa-star cursor-pointer hover:scale-110 transition-transform"></i>
+                            <i class="fa-solid fa-star cursor-pointer hover:scale-110 transition-transform"></i>
+                            <i class="fa-solid fa-star cursor-pointer hover:scale-110 transition-transform"></i>
+                            <i class="fa-solid fa-star cursor-pointer hover:scale-110 transition-transform"></i>
+                            <i class="fa-solid fa-star cursor-pointer hover:scale-110 transition-transform"></i>
+                        </div>
+
+                        <textarea rows="3" placeholder="Write your review here..." class="w-full bg-slate-50 dark:bg-[#0B1310] border border-slate-200 dark:border-emerald-900/40 rounded-2xl p-3.5 text-xs text-slate-800 dark:text-white placeholder-slate-400 focus:outline-none focus:border-brand mb-5"></textarea>
+
+                        <button onclick="submitReviewAndFinish()" class="w-full theme-gradient hover:opacity-95 text-white font-bold py-3.5 rounded-2xl shadow-xl transition-all text-xs">
+                            Submit Review & Close Session
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+
+        <!-- PERSISTENT FLOATING ACTION TOOLBAR -->
+        <div id="persistent-toolbar" class="absolute bottom-4 left-1/2 -translate-x-1/2 bg-white/95 dark:bg-[#13221C]/95 backdrop-blur-md border border-slate-200 dark:border-emerald-900/40 rounded-3xl px-4 sm:px-6 py-2.5 shadow-2xl z-50 flex items-center space-x-4 sm:space-x-6 hidden text-[11px] sm:text-xs font-bold">
+            <button onclick="triggerToolbarAction('call')" class="flex items-center space-x-1.5 text-slate-700 dark:text-slate-200 hover:text-brand">
+                <i class="fa-solid fa-bell theme-text"></i><span class="hidden sm:inline">Call Waiter</span>
+            </button>
+            <div class="w-px h-4 bg-slate-200 dark:bg-emerald-900/40"></div>
+            <button onclick="triggerToolbarAction('bill')" class="flex items-center space-x-1.5 text-slate-700 dark:text-slate-200 hover:text-brand">
+                <i class="fa-solid fa-receipt theme-text"></i><span class="hidden sm:inline">Request Bill</span>
+            </button>
+            <div class="w-px h-4 bg-slate-200 dark:bg-emerald-900/40"></div>
+            <button onclick="switchView('menu')" class="flex items-center space-x-1.5 text-slate-700 dark:text-slate-200 hover:text-brand">
+                <i class="fa-solid fa-plus theme-text"></i><span class="hidden sm:inline">Order More</span>
+            </button>
+            <div class="w-px h-4 bg-slate-200 dark:bg-emerald-900/40"></div>
+            <button onclick="switchView('tracking')" class="flex items-center space-x-1.5 text-slate-700 dark:text-slate-200 hover:text-brand">
+                <i class="fa-solid fa-clock-rotate-left theme-text"></i><span class="hidden sm:inline">History</span>
+            </button>
+        </div>
+
+        <!-- TOAST NOTIFICATION -->
+        <div id="toast-modal" class="fixed top-5 right-5 z-50 bg-white dark:bg-[#13221C] border border-brand text-slate-900 dark:text-white px-5 py-3 rounded-2xl shadow-2xl flex items-center space-x-3 transform translate-x-96 transition-all duration-300">
+            <div class="w-8 h-8 rounded-xl theme-gradient flex items-center justify-center text-white text-xs font-bold">
+                <i class="fa-solid fa-check"></i>
+            </div>
+            <div>
+                <h4 id="toast-title" class="text-xs font-bold">Notification</h4>
+                <p id="toast-desc" class="text-[11px] text-slate-400">Action completed successfully.</p>
+            </div>
+        </div>
+
+    </div>
+
+</body>
+</html>
